@@ -6,7 +6,7 @@ INCLUDE_DIRECTORIES(${cuda_dir})
 
 SET(LOG_CPP /usr/src/tensorrt/samples/common/logger.cpp)
 
-ADD_EXECUTABLE(trt_test main.cpp ${LOG_CPP})
+ADD_EXECUTABLE(trt_test serialize_engine.cpp ${LOG_CPP})
 
 find_library(LIBNVINFER nvinfer /usr/lib/x86_64-linux-gnu/)
 TARGET_LINK_LIBRARIES(trt_test ${LIBNVINFER})

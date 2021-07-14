@@ -14,19 +14,19 @@
 #include <iostream>
 #include <sstream>
 
-const std::string gSampleName = "TensorRT.sample_onnx_mnist";
+const std::string gSampleName = "TensorRT.sample_onnx_model";
 
-//! \brief  The SampleOnnxMNIST class implements the ONNX MNIST sample
+//! \brief  The SampleOnnxToTensorRT class implements the ONNX MNIST sample
 //!
 //! \details It creates the network using an ONNX model
 //!
-class SampleOnnxMNIST
+class SampleOnnxToTensorRT
 {
     template <typename T>
     using SampleUniquePtr = std::unique_ptr<T, samplesCommon::InferDeleter>;
 
 public:
-    SampleOnnxMNIST(const samplesCommon::OnnxSampleParams& params)
+    SampleOnnxToTensorRT(const samplesCommon::OnnxSampleParams& params)
         : mParams(params)
         , mEngine(nullptr)
     {
@@ -80,60 +80,60 @@ private:
 //!
 //! \return Returns true if the engine was created successfully and false otherwise
 //!
-bool SampleOnnxMNIST::build()
+bool SampleOnnxToTensorRT::build()
 {
     /// REMARK: to load a new onnx model, uncommon the following lines until the next <REMARK:> script
     // -----------------------------------------------------------------------------------------------------------------------
-    // auto builder = SampleUniquePtr<nvinfer1::IBuilder>(nvinfer1::createInferBuilder(gLogger.getTRTLogger()));
-    // if (!builder)
-    // {
-    //     return false;
-    // }
+    auto builder = SampleUniquePtr<nvinfer1::IBuilder>(nvinfer1::createInferBuilder(gLogger.getTRTLogger()));
+    if (!builder)
+    {
+        return false;
+    }
 
-    // const auto explicitBatch = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);     
-    // auto network = SampleUniquePtr<nvinfer1::INetworkDefinition>(builder->createNetworkV2(explicitBatch));
-    // if (!network)
-    // {
-    //     return false;
-    // }
+    const auto explicitBatch = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);     
+    auto network = SampleUniquePtr<nvinfer1::INetworkDefinition>(builder->createNetworkV2(explicitBatch));
+    if (!network)
+    {
+        return false;
+    }
 
-    // auto config = SampleUniquePtr<nvinfer1::IBuilderConfig>(builder->createBuilderConfig());
-    // if (!config)
-    // {
-    //     return false;
-    // }
+    auto config = SampleUniquePtr<nvinfer1::IBuilderConfig>(builder->createBuilderConfig());
+    if (!config)
+    {
+        return false;
+    }
 
-    // auto parser = SampleUniquePtr<nvonnxparser::IParser>(nvonnxparser::createParser(*network, gLogger.getTRTLogger()));
-    // if (!parser)
-    // {
-    //     return false;
-    // }
+    auto parser = SampleUniquePtr<nvonnxparser::IParser>(nvonnxparser::createParser(*network, gLogger.getTRTLogger()));
+    if (!parser)
+    {
+        return false;
+    }
 
-    // auto constructed = constructNetwork(builder, network, config, parser);
-    // if (!constructed)
-    // {
-    //     return false;
-    // }
+    auto constructed = constructNetwork(builder, network, config, parser);
+    if (!constructed)
+    {
+        return false;
+    }
 
-    // mEngine = std::shared_ptr<nvinfer1::ICudaEngine>(
-    //     builder->buildEngineWithConfig(*network, *config), samplesCommon::InferDeleter());
+    mEngine = std::shared_ptr<nvinfer1::ICudaEngine>(
+        builder->buildEngineWithConfig(*network, *config), samplesCommon::InferDeleter());
 
 
     /// REMARK: we can deserialize a serialized engine if we have one:
     // -----------------------------------------------------------------------------------------------------------------------
-    nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(gLogger);
-    std::string cached_path = "/home/tingjun/Desktop/TensorRT_PROJECT_USE/engines/0616_2blocks_best_val_loss.trt";
-    std::ifstream fin(cached_path);
-    std::string cached_engine = "";
-    while (fin.peek() != EOF) {
-        std::stringstream buffer;
-        buffer << fin.rdbuf();
-        cached_engine.append(buffer.str());
-    }
-    fin.close();
-    mEngine = std::shared_ptr<nvinfer1::ICudaEngine> (
-                                    runtime->deserializeCudaEngine(cached_engine.data(), cached_engine.size(), nullptr),
-                                    samplesCommon::InferDeleter());
+    // nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(gLogger);
+    // std::string cached_path = "/home/tingjun/Desktop/TensorRT_PROJECT_USE/engines/0616_2blocks_best_val_loss.trt";
+    // std::ifstream fin(cached_path);
+    // std::string cached_engine = "";
+    // while (fin.peek() != EOF) {
+    //     std::stringstream buffer;
+    //     buffer << fin.rdbuf();
+    //     cached_engine.append(buffer.str());
+    // }
+    // fin.close();
+    // mEngine = std::shared_ptr<nvinfer1::ICudaEngine> (
+    //                                 runtime->deserializeCudaEngine(cached_engine.data(), cached_engine.size(), nullptr),
+    //                                 samplesCommon::InferDeleter());
     if (!mEngine)
     {
         return false;
@@ -141,13 +141,13 @@ bool SampleOnnxMNIST::build()
 
     /// REMARK: the following can be used to find input/output dimension
     // -----------------------------------------------------------------------------------------------------------------------
-    // assert(network->getNbInputs() == 1);
-    // mInputDims = network->getInput(0)->getDimensions();
-    // assert(mInputDims.nbDims == 3);
+    assert(network->getNbInputs() == 1);
+    mInputDims = network->getInput(0)->getDimensions();
+    assert(mInputDims.nbDims == 3);
 
-    // assert(network->getNbOutputs() == 1);
-    // mOutputDims = network->getOutput(0)->getDimensions();
-    // assert(mOutputDims.nbDims == 2);
+    assert(network->getNbOutputs() == 1);
+    mOutputDims = network->getOutput(0)->getDimensions();
+    assert(mOutputDims.nbDims == 2);
     // -----------------------------------------------------------------------------------------------------------------------
 
     std::cout << "Successfully built the engine" << std::endl;
@@ -163,7 +163,7 @@ bool SampleOnnxMNIST::build()
 //!
 //! \param builder Pointer to the engine builder
 //!
-bool SampleOnnxMNIST::constructNetwork(SampleUniquePtr<nvinfer1::IBuilder>& builder,
+bool SampleOnnxToTensorRT::constructNetwork(SampleUniquePtr<nvinfer1::IBuilder>& builder,
     SampleUniquePtr<nvinfer1::INetworkDefinition>& network, SampleUniquePtr<nvinfer1::IBuilderConfig>& config,
     SampleUniquePtr<nvonnxparser::IParser>& parser)
 {
@@ -180,6 +180,7 @@ bool SampleOnnxMNIST::constructNetwork(SampleUniquePtr<nvinfer1::IBuilder>& buil
     {
         config->setFlag(BuilderFlag::kFP16);
     }
+    /// REMARK: if you want to make the inference faster but less accurate:
     // if (mParams.int8)
     // {
     //     config->setFlag(BuilderFlag::kINT8);
@@ -197,7 +198,7 @@ bool SampleOnnxMNIST::constructNetwork(SampleUniquePtr<nvinfer1::IBuilder>& buil
 //! \details This function is the main execution function of the sample. It allocates the buffer,
 //!          sets inputs and executes the engine.
 //!
-bool SampleOnnxMNIST::infer()
+bool SampleOnnxToTensorRT::infer()
 {
     // Create RAII buffer manager object
     if (!mEngine) {
@@ -242,7 +243,7 @@ bool SampleOnnxMNIST::infer()
     return true;
 }
 
-bool SampleOnnxMNIST::serialize() {
+bool SampleOnnxToTensorRT::serialize() {
     nvinfer1::IHostMemory *serializedModel = mEngine->serialize();
     std::string serialize_str;
     std::ofstream serialize_output_stream;
@@ -261,17 +262,21 @@ bool SampleOnnxMNIST::serialize() {
 //!
 //! \brief Reads the input and stores the result in a managed buffer
 //!
-bool SampleOnnxMNIST::processInput(const samplesCommon::BufferManager& buffers)
+bool SampleOnnxToTensorRT::processInput(const samplesCommon::BufferManager& buffers)
 {   
-    // const int inputH = mInputDims.d[1];
-    // std::cout << "inputH is: " << inputH << std::endl;
+    /// REMARK: if you don't know the input dimension, you can find it by parsing the ONNX model directly;
+    /// You cannot find the dimension if you use a serialized engine.
+    const int inputH = mInputDims.d[1];
+    std::cout << "inputH is: " << inputH << std::endl;
 
-    // const int inputW = mInputDims.d[2];
-    // std::cout << "inputW is: " << inputW << std::endl;
+    const int inputW = mInputDims.d[2];
+    std::cout << "inputW is: " << inputW << std::endl;
 
-    const int inputH = 150;
-    const int inputW = 54;
+    /// REMARK: after you get the input dimension, you can define them here:
+    // const int inputH = 150;
+    // const int inputW = 54;
     
+    /// REMARK: use a *.bin file to parse the model
     std::vector<uint8_t> fileData(inputH * inputW);
     std::ifstream data_file;
     data_file.open((locateFile("input_matrix.bin", mParams.dataDirs)), std::ios::in | std::ios::binary);
@@ -294,12 +299,14 @@ bool SampleOnnxMNIST::processInput(const samplesCommon::BufferManager& buffers)
 //!
 //! \return whether the classification output matches expectations
 //!
-bool SampleOnnxMNIST::verifyOutput(const samplesCommon::BufferManager& buffers)
+bool SampleOnnxToTensorRT::verifyOutput(const samplesCommon::BufferManager& buffers)
 {
-    // const int outputSize = mOutputDims.d[1];
-    // std::cout << "outputSize is " << outputSize << std::endl;
+    /// REMARK: if you don't know the output dimension, you can find it by parsing the ONNX model directly;
+    /// You cannot find the dimension if you use a serialized engine.
+    const int outputSize = mOutputDims.d[1];
+    std::cout << "outputSize is " << outputSize << std::endl;
 
-    const int outputSize = 16;
+    // const int outputSize = 16;
     
     float* output = static_cast<float*>(buffers.getHostBuffer(mParams.outputTensorNames[0]));
     float val{0.0f};
@@ -374,9 +381,7 @@ int main(int argc, char** argv)
 {
     samplesCommon::Args args;
     bool argsOK = samplesCommon::parseArgs(args, argc, argv);
-    std::cout << "What is argc?  " << argc << std::endl;
-    std::cout << "What is *argv?  " << *argv << std::endl;
-    
+
     if (!argsOK)
     {
         gLogError << "Invalid arguments" << std::endl;
@@ -393,7 +398,7 @@ int main(int argc, char** argv)
 
     gLogger.reportTestStart(sampleTest);
 
-    SampleOnnxMNIST sample(initializeSampleParams(args));
+    SampleOnnxToTensorRT sample(initializeSampleParams(args));
 
     gLogInfo << "Building and running a GPU inference engine for Onnx MNIST" << std::endl;
 
@@ -407,10 +412,12 @@ int main(int argc, char** argv)
     }
 
     /// REMARK: if you want to serialize the engine, please uncommon the following line:
-    // if (!sample.serialize())
-    // {
-    //     std::cerr << "Failed to serialize" << std::endl;
-    // }
+    /// Once you have a serialized model, you don't need to do it again. You can directly
+    /// use the serialized model in build;
+    if (!sample.serialize())
+    {
+        std::cerr << "Failed to serialize" << std::endl;
+    }
 
     return gLogger.reportPass(sampleTest);
 }
