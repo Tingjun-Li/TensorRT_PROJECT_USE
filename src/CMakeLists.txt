@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.20)
+
 SET(common_dir /usr/src/tensorrt/samples/common)
 INCLUDE_DIRECTORIES(${common_dir})
 
