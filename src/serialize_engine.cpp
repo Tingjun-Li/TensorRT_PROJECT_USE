@@ -16,7 +16,7 @@
 
 const std::string gSampleName = "TensorRT.sample_onnx_model";
 
-//! \brief  The SampleOnnxToTensorRT class implements the ONNX MNIST sample
+//! \brief  The SampleOnnxToTensorRT class implements the ONNX sample
 //!
 //! \details It creates the network using an ONNX model
 //!
@@ -55,7 +55,7 @@ private:
     std::shared_ptr<nvinfer1::ICudaEngine> mEngine; //!< The TensorRT engine used to run the network
 
     //!
-    //! \brief Parses an ONNX model for MNIST and creates a TensorRT network
+    //! \brief Parses an ONNX model for Contact Estimator and creates a TensorRT network
     //!
     bool constructNetwork(SampleUniquePtr<nvinfer1::IBuilder>& builder,
         SampleUniquePtr<nvinfer1::INetworkDefinition>& network, SampleUniquePtr<nvinfer1::IBuilderConfig>& config,
@@ -75,8 +75,8 @@ private:
 //!
 //! \brief Creates the network, configures the builder and creates the network engine
 //!
-//! \details This function creates the Onnx MNIST network by parsing the Onnx model and builds
-//!          the engine that will be used to run MNIST (mEngine)
+//! \details This function creates the Onnx Contact Estimator network by parsing the Onnx model and builds
+//!          the engine that will be used to run Contact Estimator (mEngine)
 //!
 //! \return Returns true if the engine was created successfully and false otherwise
 //!
@@ -156,10 +156,10 @@ bool SampleOnnxToTensorRT::build()
 }
 
 //!
-//! \brief Uses a ONNX parser to create the Onnx MNIST Network and marks the
+//! \brief Uses a ONNX parser to create the Onnx Contact Estimator Network and marks the
 //!        output layers
 //!
-//! \param network Pointer to the network that will be populated with the Onnx MNIST network
+//! \param network Pointer to the network that will be populated with the Onnx Contact Estimator network
 //!
 //! \param builder Pointer to the engine builder
 //!
@@ -337,7 +337,6 @@ samplesCommon::OnnxSampleParams initializeSampleParams(const samplesCommon::Args
         std::cout << "Using default directory" << endl;
         params.dataDirs.push_back("weights/");
         params.dataDirs.push_back("data/");
-        // params.dataDirs.push_back("data/samples/mnist/");
     }
     else //!< Use the data directory provided by the user
     {
@@ -361,12 +360,12 @@ samplesCommon::OnnxSampleParams initializeSampleParams(const samplesCommon::Args
 void printHelpInfo()
 {
     std::cout
-        << "Usage: ./sample_onnx_mnist [-h or --help] [-d or --datadir=<path to data directory>] [--useDLACore=<int>]"
+        << "Usage: ./serialize_engine [-h or --help] [-d or --datadir=<path to data directory>] [--useDLACore=<int>]"
         << std::endl;
     std::cout << "--help          Display help information" << std::endl;
     std::cout << "--datadir       Specify path to a data directory, overriding the default. This option can be used "
                  "multiple times to add multiple directories. If no data directories are given, the default is to use "
-                 "(data/samples/mnist/, data/mnist/)"
+                 "(data, weight)"
               << std::endl;
     std::cout << "--useDLACore=N  Specify a DLA engine for layers that support DLA. Value can range from 0 to n-1, "
                  "where n is the number of DLA engines on the platform."
@@ -400,7 +399,7 @@ int main(int argc, char** argv)
 
     SampleOnnxToTensorRT sample(initializeSampleParams(args));
 
-    gLogInfo << "Building and running a GPU inference engine for Onnx MNIST" << std::endl;
+    gLogInfo << "Building and running a GPU inference engine for Onnx Contact Estimator" << std::endl;
 
     if (!sample.build())
     {
